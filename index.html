@@ -1,0 +1,88 @@
+<!doctype html><html lang="ur" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b5d4b"><link rel="manifest" href="manifest.json">
+<title>نور اسلامک ایپ</title>
+<style>
+:root{--g:#0b5d4b;--g2:#0f7a62;--gold:#d4a73c;--bg:#f6f3ea;--c:#fff;--t:#1d2b27}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1d1a;--c:#182a26;--t:#eef3f0}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--t);font:17px/1.7 "Noto Naskh Arabic","Noto Nastaliq Urdu",system-ui,sans-serif;padding-bottom:76px}
+header{background:linear-gradient(135deg,var(--g),var(--g2));color:#fff;padding:calc(14px + env(safe-area-inset-top)) 16px 14px;display:flex;justify-content:space-between;align-items:center}
+header h1{margin:0;font-size:21px}button{font:inherit;cursor:pointer}
+.lang{background:var(--gold);border:0;border-radius:20px;padding:2px 14px;color:#222}
+main{padding:14px;max-width:640px;margin:auto}.card{background:var(--c);border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 2px 8px #0002}
+.row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #8882}.row:last-child{border:0}.on{color:var(--gold);font-weight:700}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--g);padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;background:none;border:0;color:#cfe;padding:8px 2px;font-size:13px}nav button.a{color:#fff;border-top:3px solid var(--gold)}
+.big{font-size:60px;text-align:center;margin:10px}.ar{font-size:24px;line-height:2.2;text-align:center;direction:rtl}
+.btn{background:var(--g);color:#fff;border:0;border-radius:12px;padding:8px 16px;margin:3px}
+#tap{width:200px;height:200px;border-radius:50%;border:8px solid var(--gold);background:var(--g);color:#fff;font-size:56px;display:block;margin:14px auto}
+#arrow{width:0;height:0;margin:20px auto;border-left:22px solid transparent;border-right:22px solid transparent;border-bottom:120px solid var(--gold);transition:transform .2s}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}.cal div{padding:4px 0;border-radius:8px;font-size:15px}.cal small{display:block;font-size:11px;opacity:.7}.today{background:var(--g);color:#fff}
+select{font:inherit;padding:6px;border-radius:8px;width:100%}
+</style></head><body>
+<header><h1 id="ttl"></h1><button class="lang" onclick="setL()">EN / اردو</button></header>
+<main id="m"></main>
+<nav id="nv"></nav>
+<script src="duas.js"></script>
+<script>
+const $=s=>document.querySelector(s);let lang=localStorage.lang||'ur',tab='home',pos=JSON.parse(localStorage.pos||'{"lat":24.86,"lng":67.01}');
+const T={ur:{app:"نور اسلامک ایپ",home:"اوقات",qibla:"قبلہ",tas:"تسبیح",duas:"دعائیں",cal:"کیلنڈر",
+p:["فجر","طلوع","ظہر","عصر","مغرب","عشاء"],sehri:"سحری ختم",iftar:"افطار",next:"اگلی نماز",loc:"مقام اپڈیٹ کریں",deg:"درجے",
+tap:"گنتی",reset:"ری سیٹ",cnt:"کل",aim:"ہدف",calib:"موبائل کو ہموار رکھیں؛ تیر کعبہ کی سمت دکھاتا ہے",
+mo:["جنوری","فروری","مارچ","اپریل","مئی","جون","جولائی","اگست","ستمبر","اکتوبر","نومبر","دسمبر"],
+hm:["محرم","صفر","ربیع الاول","ربیع الثانی","جمادی الاول","جمادی الثانی","رجب","شعبان","رمضان","شوال","ذوالقعدہ","ذوالحجہ"],
+wd:["اتوار","پیر","منگل","بدھ","جمعرات","جمعہ","ہفتہ"],adj:"ہجری تاریخ ±1"},
+en:{app:"Noor Islamic App",home:"Times",qibla:"Qibla",tas:"Tasbeeh",duas:"Duas",cal:"Calendar",
+p:["Fajr","Sunrise","Dhuhr","Asr","Maghrib","Isha"],sehri:"Sehri ends",iftar:"Iftar",next:"Next prayer",loc:"Update location",deg:"degrees",
+tap:"Tap",reset:"Reset",cnt:"Total",aim:"Target",calib:"Hold phone flat; the arrow points to the Kaaba",
+mo:["January","February","March","April","May","June","July","August","September","October","November","December"],
+hm:["Muharram","Safar","Rabi I","Rabi II","Jumada I","Jumada II","Rajab","Shaban","Ramadan","Shawwal","Dhul Qadah","Dhul Hijjah"],
+wd:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],adj:"Hijri date ±1"}};
+const t=()=>T[lang],R=Math.PI/180,D=180/Math.PI;
+function setL(){lang=lang=='ur'?'en':'ur';localStorage.lang=lang;draw()}
+function times(d){const{lat,lng}=pos,tz=-d.getTimezoneOffset()/60;
+const J=Date.UTC(d.getFullYear(),d.getMonth(),d.getDate(),12)/864e5+2440587.5-2451545;
+const g=(357.529+.98560028*J)%360,q=(280.459+.98564736*J)%360,L=q+1.915*Math.sin(g*R)+.02*Math.sin(2*g*R),e=23.439-4e-7*J;
+let ra=Math.atan2(Math.cos(e*R)*Math.sin(L*R),Math.cos(L*R))*D/15;ra=(ra+24)%24;const dec=Math.asin(Math.sin(e*R)*Math.sin(L*R))*D;
+let eq=q/15-ra;eq=((eq+12)%24+24)%24-12;const mid=12+tz-lng/15-eq;
+const T=a=>Math.acos((-Math.sin(a*R)-Math.sin(lat*R)*Math.sin(dec*R))/(Math.cos(lat*R)*Math.cos(dec*R)))*D/15;
+const asr=-Math.atan(1/(2+Math.tan(Math.abs(lat-dec)*R)))*D; // Hanafi: shadow x2
+return[mid-T(18),mid-T(.833),mid,mid+T(asr),mid+T(.833),mid+T(-18)].map(h=>((h%24)+24)%24)}
+const fmt=h=>{let m=Math.round(h*60),H=Math.floor(m/60)%24,M=m%60,a=H>=12?(lang=='ur'?'م':'PM'):(lang=='ur'?'ص':'AM');return(H%12||12)+':'+String(M).padStart(2,'0')+' '+a}
+function locate(){const G=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Geolocation;
+const ok=p=>{pos={lat:p.coords.latitude,lng:p.coords.longitude};localStorage.pos=JSON.stringify(pos);draw()};
+try{G?G.getCurrentPosition().then(ok):navigator.geolocation.getCurrentPosition(ok)}catch(e){}}
+function hijri(d){const o=+(localStorage.adj||0),x=new Date(d.getTime()+o*864e5);
+const p=new Intl.DateTimeFormat('en-u-ca-islamic-umalqura-nu-latn',{day:'numeric',month:'numeric',year:'numeric'}).formatToParts(x);
+const f=k=>+p.find(z=>z.type==k).value;return{d:f('day'),m:f('month'),y:f('year')}}
+const hs=d=>{const h=hijri(d);return h.d+' '+t().hm[h.m-1]+' '+h.y+(lang=='ur'?' ھ':' AH')};
+let calM=new Date(),cnt=+localStorage.cnt||0,aim=+localStorage.aim||33,zk=localStorage.zk||0;
+function draw(){document.documentElement.lang=lang;document.documentElement.dir=lang=='ur'?'rtl':'ltr';$('#ttl').textContent=t().app;
+$('#nv').innerHTML=[['home','🕌'],['qibla','🧭'],['tas','📿'],['duas','📖'],['cal','📅']].map(([k,i])=>`<button class="${tab==k?'a':''}" onclick="tab='${k}';draw()">${i}<br>${t()[k]}</button>`).join('');
+$('#m').innerHTML=V[tab]();if(tab=='qibla')compass()}
+const V={
+home(){const now=new Date(),h=times(now),n=now.getHours()+now.getMinutes()/60,idx=[0,2,3,4,5].find(i=>h[i]>n);
+return`<div class="card"><b>${t().wd[now.getDay()]} ${now.getDate()} ${t().mo[now.getMonth()]} ${now.getFullYear()}</b><br>${hs(now)}</div>
+<div class="card">${h.map((x,i)=>`<div class="row ${i===idx?'on':''}"><span>${t().p[i]}</span><span>${fmt(x)}</span></div>`).join('')}</div>
+<div class="card"><div class="row"><span>🌙 ${t().sehri}</span><b>${fmt(h[0])}</b></div><div class="row"><span>🌅 ${t().iftar}</span><b>${fmt(h[4])}</b></div></div>
+<button class="btn" onclick="locate()">📍 ${t().loc}</button>`},
+qibla(){const a=qb();return`<div class="card"><div class="big">${Math.round(a)}°</div><div id="arrow"></div><p style="text-align:center">${t().calib}</p></div><button class="btn" onclick="locate()">📍 ${t().loc}</button>`},
+tas(){const Z=[["سُبْحَانَ اللّٰهِ"],["الْحَمْدُ لِلّٰهِ"],["اللّٰهُ أَكْبَرُ"],["أَسْتَغْفِرُ اللّٰهَ"],["لَا إِلٰهَ إِلَّا اللّٰهُ"]];
+return`<div class="card"><select onchange="zk=this.value;localStorage.zk=zk">${Z.map((z,i)=>`<option value="${i}" ${i==zk?'selected':''}>${z[0]}</option>`).join('')}</select>
+<select onchange="aim=+this.value;localStorage.aim=aim;draw()" style="margin-top:8px">${[33,99,100,500,1000].map(v=>`<option ${v==aim?'selected':''}>${v}</option>`).join('')}</select>
+<button id="tap" onclick="tp()">${cnt}</button><div style="text-align:center">${t().aim}: ${aim} — ${t().cnt}: ${cnt}</div>
+<div style="text-align:center"><button class="btn" onclick="cnt=0;localStorage.cnt=0;draw()">${t().reset}</button></div></div>`},
+duas(){return DUAS.map(d=>`<div class="card"><small>${d.t}</small><div class="ar">${d.ar}</div><div>${lang=='ur'?d.ur:d.en}</div></div>`).join('')},
+cal(){const y=calM.getFullYear(),m=calM.getMonth(),f=new Date(y,m,1).getDay(),n=new Date(y,m+1,0).getDate(),td=new Date();
+let c=t().wd.map(w=>`<b>${w.slice(0,lang=='ur'?3:3)}</b>`).join('')+'<div></div>'.repeat(f);
+for(let i=1;i<=n;i++){const d=new Date(y,m,i,12),h=hijri(d),is=td.toDateString()==d.toDateString();c+=`<div class="${is?'today':''}">${i}<small>${h.d}${h.d==1?' '+t().hm[h.m-1]:''}</small></div>`}
+return`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><button class="btn" onclick="calM=new Date(${y},${m-1},1);draw()">‹</button><b>${t().mo[m]} ${y}<br><small>${hs(new Date(y,m,15))}</small></b><button class="btn" onclick="calM=new Date(${y},${m+1},1);draw()">›</button></div><div class="cal">${c}</div>
+<div style="text-align:center;margin-top:8px">${t().adj}: <button class="btn" onclick="localStorage.adj=(+localStorage.adj||0)-1;draw()">−</button><button class="btn" onclick="localStorage.adj=(+localStorage.adj||0)+1;draw()">+</button></div></div>`}};
+function tp(){cnt++;localStorage.cnt=cnt;if(navigator.vibrate)navigator.vibrate(cnt%aim==0?[200,100,200]:20);$('#tap').textContent=cnt}
+function qb(){const a=pos.lat*R,b=21.4225*R,l=(39.8262-pos.lng)*R;return(Math.atan2(Math.sin(l)*Math.cos(b),Math.cos(a)*Math.sin(b)-Math.sin(a)*Math.cos(b)*Math.cos(l))*D+360)%360}
+function compass(){const A=$('#arrow');const h=e=>{if(tab!='qibla')return;const hd=e.webkitCompassHeading??(e.absolute?360-e.alpha:null);if(hd!=null&&A)A.style.transform=`rotate(${qb()-hd}deg)`};
+const go=()=>{addEventListener('deviceorientationabsolute',h,true);addEventListener('deviceorientation',h,true)};
+if(window.DeviceOrientationEvent&&DeviceOrientationEvent.requestPermission)DeviceOrientationEvent.requestPermission().then(go).catch(()=>{});else go();if(A)A.style.transform=`rotate(${qb()}deg)`}
+if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js');
+draw();setInterval(()=>{if(tab=='home')draw()},60000);
+</script></body></html>
